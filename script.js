@@ -793,40 +793,132 @@ function updateServiceFields(service) {
     const status = document.getElementById("request-status");
     const submitButton = form.querySelector(".request-submit");
 
+    const serviceType = document.getElementById("service-type");
+    const requestName = document.getElementById("request-name");
+    const requestEmail = document.getElementById("request-email");
+    const requestPhone = document.getElementById("request-phone");
+    const requestTitle = document.getElementById("request-title");
+    const requestMessage = document.getElementById("request-message");
+    const requestLocation = document.getElementById("request-location");
+    const requestUrgency = document.getElementById("request-urgency");
+
+    let lastSubmissionTime = 0;
+
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        if (submitButton.disabled) return;
+        const now = Date.now();
 
-        const serviceType = document.getElementById("service-type");
-        const requestName = document.getElementById("request-name");
-        const requestEmail = document.getElementById("request-email");
-        const requestPhone = document.getElementById("request-phone");
-        const requestTitle = document.getElementById("request-title");
-        const requestMessage = document.getElementById("request-message");
-        const requestLocation = document.getElementById("request-location");
-        const requestUrgency = document.getElementById("request-urgency");
+        // Prevent rapid repeated submissions
+        if (now - lastSubmissionTime < 10000) {
+            status.textContent =
+                "Please wait a few seconds before submitting another request.";
+            status.className = "request-status error";
+            return;
+        }
 
-        const templateParams = {
-            service_type: serviceType.value.trim(),
-            request_name: requestName.value.trim(),
-            request_email: requestEmail.value.trim(),
-            request_phone: requestPhone.value.trim(),
-            request_title: requestTitle.value.trim(),
-            request_message: requestMessage.value.trim(),
-            request_location: requestLocation.value.trim(),
-            request_urgency: requestUrgency.value,
-            company: "UNIQUE Technology"
-        };
+        // Native HTML validation
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
 
+        // Clean input values
+        const service = serviceType.value.trim();
+        const name = requestName.value.trim();
+        const email = requestEmail.value.trim();
+        const phone = requestPhone.value.trim();
+        const title = requestTitle.value.trim();
+        const message = requestMessage.value.trim();
+        const location = requestLocation.value.trim();
+        const urgency = requestUrgency.value;
+
+        // Additional validation
+        if (!service || !name || !email || !phone || !title || !message) {
+            status.textContent =
+                "Please complete all required fields.";
+            status.className = "request-status error";
+            return;
+        }
+
+        // Email format validation
+        const emailPattern =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailPattern.test(email)) {
+            status.textContent =
+                "Please enter a valid email address.";
+            status.className = "request-status error";
+            requestEmail.focus();
+            return;
+        }
+
+        // Basic phone validation
+        const phonePattern =
+            /^[0-9+\-\s()]{7,20}$/;
+
+        if (!phonePattern.test(phone)) {
+            status.textContent =
+                "Please enter a valid phone number.";
+            status.className = "request-status error";
+            requestPhone.focus();
+            return;
+        }
+
+        // Reasonable length limits
+        if (name.length > 100) {
+            status.textContent =
+                "Full name is too long.";
+            status.className = "request-status error";
+            return;
+        }
+
+        if (title.length > 150) {
+            status.textContent =
+                "Project / Service Title is too long.";
+            status.className = "request-status error";
+            return;
+        }
+
+        if (message.length > 5000) {
+            status.textContent =
+                "Your description is too long. Please keep it under 5000 characters.";
+            status.className = "request-status error";
+            return;
+        }
+
+        if (location.length > 150) {
+            status.textContent =
+                "Location is too long.";
+            status.className = "request-status error";
+            return;
+        }
+
+        // Lock submission
         submitButton.disabled = true;
+        lastSubmissionTime = now;
+
         submitButton.innerHTML = `
             <i class="fas fa-spinner fa-spin"></i>
             Sending...
         `;
 
-        status.textContent = "Sending your service request...";
-        status.className = "request-status";
+        status.textContent =
+            "Sending your service request...";
+        status.className =
+            "request-status";
+
+        const templateParams = {
+            service_type: service,
+            request_name: name,
+            request_email: email,
+            request_phone: phone,
+            request_title: title,
+            request_message: message,
+            request_location: location,
+            request_urgency: urgency,
+            company: "UNIQUE Technology"
+        };
 
         try {
             await emailjs.send(
@@ -844,13 +936,19 @@ function updateServiceFields(service) {
             form.reset();
 
         } catch (error) {
-            console.error("Service Request EmailJS Error:", error);
+            console.error(
+                "Service Request EmailJS Error:",
+                error
+            );
 
             status.textContent =
-                "Failed to send service request. Please try again.";
+                "Unable to send your request right now. Please try again.";
 
             status.className =
                 "request-status error";
+
+            // Allow retry after a failed request
+            lastSubmissionTime = 0;
 
         } finally {
             submitButton.disabled = false;
@@ -862,7 +960,7 @@ function updateServiceFields(service) {
         }
     });
 }
-
+            
 /* =========================================================
    09. REQUEST STATUS
    ========================================================= */
