@@ -785,89 +785,83 @@ function updateServiceFields(service) {
    08. SERVICE REQUEST FORM
    ========================================================= */
 
-function initServiceRequestForm() {
+  function initServiceRequestForm() {
+    const form = document.getElementById("service-request-form");
 
-    const form =
-        document.getElementById(
-            "service-request-form"
-        );
+    if (!form) return;
 
+    const status = document.getElementById("request-status");
+    const submitButton = form.querySelector(".request-submit");
 
-    const status =
-        document.getElementById(
-            "request-status"
-        );
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
 
+        if (submitButton.disabled) return;
 
-    if (!form) {
+        const serviceType = document.getElementById("service-type");
+        const requestName = document.getElementById("request-name");
+        const requestEmail = document.getElementById("request-email");
+        const requestPhone = document.getElementById("request-phone");
+        const requestTitle = document.getElementById("request-title");
+        const requestMessage = document.getElementById("request-message");
+        const requestLocation = document.getElementById("request-location");
+        const requestUrgency = document.getElementById("request-urgency");
 
-        return;
+        const templateParams = {
+            service_type: serviceType.value.trim(),
+            request_name: requestName.value.trim(),
+            request_email: requestEmail.value.trim(),
+            request_phone: requestPhone.value.trim(),
+            request_title: requestTitle.value.trim(),
+            request_message: requestMessage.value.trim(),
+            request_location: requestLocation.value.trim(),
+            request_urgency: requestUrgency.value,
+            company: "UNIQUE Technology"
+        };
 
-    }
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+            <i class="fas fa-spinner fa-spin"></i>
+            Sending...
+        `;
 
+        status.textContent = "Sending your service request...";
+        status.className = "request-status";
 
-    form.addEventListener(
-        "submit",
-        event => {
-
-            event.preventDefault();
-
-
-            if (!form.checkValidity()) {
-
-                form.reportValidity();
-
-                return;
-
-            }
-
-
-            const service =
-                document.getElementById(
-                    "service-type"
-                )?.value;
-
-
-            const name =
-                document.getElementById(
-                    "request-name"
-                )?.value.trim();
-
-
-            if (
-                !service ||
-                !name
-            ) {
-
-                showRequestStatus(
-                    status,
-                    "Please select a service and enter your name.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            /*
-             * Frontend validation only.
-             *
-             * Real database/API submission
-             * will be added in the backend phase.
-             */
-
-            showRequestStatus(
-                status,
-                "Your service request has been prepared successfully.",
-                "success"
+        try {
+            await emailjs.send(
+                "service_jngw8ge",
+                "template_m3h6xvf",
+                templateParams
             );
 
+            status.textContent =
+                "Service request sent successfully. Thank you!";
+
+            status.className =
+                "request-status success";
+
+            form.reset();
+
+        } catch (error) {
+            console.error("Service Request EmailJS Error:", error);
+
+            status.textContent =
+                "Failed to send service request. Please try again.";
+
+            status.className =
+                "request-status error";
+
+        } finally {
+            submitButton.disabled = false;
+
+            submitButton.innerHTML = `
+                <i class="fas fa-paper-plane"></i>
+                Submit Service Request
+            `;
         }
-    );
-
+    });
 }
-
 
 /* =========================================================
    09. REQUEST STATUS
