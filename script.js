@@ -13,6 +13,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    initLoader();
     initMobileNavigation();
     initActiveNavigation();
     initSmoothScrolling();
