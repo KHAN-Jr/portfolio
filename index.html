@@ -5,289 +5,1281 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Khan Electrical & Electronics Solutions</title>
+    <title>KHAN Solutions | Electrical, Electronics, Embedded & Software</title>
 
+    <meta name="description"
+        content="KHAN Solutions provides electrical, electronics, embedded systems, IoT and software development services in Tanzania.">
+
+    <meta name="keywords"
+        content="Electrical Installation Tanzania, Electronics Repair, Embedded Systems, ESP32, Arduino, IoT, Software Development, PCB Design">
+
+    <meta name="author" content="Yona Kamwela">
+
+    <meta name="google-site-verification"
+        content="JIeGXKJp1pMap0_mo0T6laE3pU8bavpTYvhnUQoWjt4">
+
+    <meta property="og:title"
+        content="KHAN Solutions | Electrical, Electronics, Embedded & Software">
+
+    <meta property="og:description"
+        content="Electrical, Electronics, Embedded Systems, IoT and Software Solutions.">
+
+    <meta property="og:image"
+        content="https://khan-jr.netlify.app/images/preview.jpg">
+
+    <meta property="og:url"
+        content="https://khan-jr.github.io/portfolio/">
+
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Main stylesheet -->
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/scrollreveal"></script>
-    <!-- Font Awesome Icons -->
+
+    <!-- Font Awesome -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <title>Khan Electrical & Electronics Solutions | Embedded Systems & Electrical Services</title>
 
-<meta charset="UTF-8">
+    <!-- ScrollReveal -->
+    <script src="https://unpkg.com/scrollreveal"></script>
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<meta name="description"
-content="Professional Electrical Installation, Electronics Repair, Embedded Systems Development, IoT Solutions and Technical Consultancy.">
-
-<meta name="keywords"
-content="Electrical Installation Tanzania, Electronics Repair, Embedded Systems, ESP32, Arduino, IoT Projects, Electrical Engineer, Electronics Specialist">
-
-<meta name="author"
-content="Yona Kamwela">
-    <meta name="google-site-verification" content="JIeGXKJp1pMap0_mo0T6laE3pU8bavpTYvhnUQoWjt4" />
-    <meta property="og:title"
-content="Khan Electrical & Electronics Solutions">
-
-<meta property="og:description"
-content="Electrical Installation, Electronics Repair, Embedded Systems and IoT Solutions">
-
-<meta property="og:image"
-content="https://khan-jr.netlify.app/images/preview.jpg">
-<meta property="og:url" content="https://khan-jr.netlify.app">
-<meta property="og:type"
-content="website">
-  <link rel="icon" type="image/png" href="images/favicon.png">  
-    
+    <!-- Structured Data -->
     <script type="application/ld+json">
-
-{
-"@context":"https://schema.org",
-
-"@type":"LocalBusiness",
-
-"name":"Khan Electrical & Electronics Solutions",
-
-"description":"Electrical Installation, Electronics Repair and Embedded Systems",
-
-"url":"https://khan-jr.netlify.app/",
-
-"telephone":"+255764094983",
-
-"address":{
-"@type":"PostalAddress",
-"addressCountry":"TANZANIA"
-}
-
-}
-
-</script>
+    {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "KHAN Electrical & Electronics Solutions",
+        "description": "Electrical Installation, Electronics Repair, Embedded Systems, IoT and Software Solutions.",
+        "url": "https://khan-jr.github.io/portfolio/",
+        "telephone": "+255764094983",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Dar es Salaam",
+            "addressCountry": "TZ"
+        }
+    }
+    </script>
 </head>
 
 <body>
-    <!-- Loading screen -->
-<div id="loader">
-    <div class="spinner"></div>
-</div>
-    <!-- Header -->
-    <header>
+
+    <!-- =========================
+         LOADING SCREEN
+    ========================== -->
+    <div id="loader" aria-label="Loading portfolio">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <span>KHAN Solutions</span>
+        </div>
+    </div>
+
+
+    <!-- =========================
+         HEADER / NAVIGATION
+    ========================== -->
+    <header class="site-header">
+
         <nav class="navbar">
-            <div class="logo">
-                KHAN Solutions
-            </div>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#services">Services</a></li>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#contact">Contact</a></li>
+
+            <a href="#home" class="logo" aria-label="KHAN Solutions Home">
+                <span class="logo-main">KHAN</span>
+                <span class="logo-sub">SOLUTIONS</span>
+            </a>
+
+            <button
+                class="menu-toggle"
+                id="menu-toggle"
+                type="button"
+                aria-label="Open navigation menu"
+                aria-expanded="false">
+
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="nav-links" id="nav-links">
+
+                <li>
+                    <a href="#home" class="active">Home</a>
+                </li>
+
+                <li>
+                    <a href="#about">About</a>
+                </li>
+
+                <li>
+                    <a href="#services">Services</a>
+                </li>
+
+                <li>
+                    <a href="#projects">Projects</a>
+                </li>
+
+                <li>
+                    <a href="#gallery">Gallery</a>
+                </li>
+
+                <li>
+                    <a href="#contact">Contact</a>
+                </li>
+
+                <li class="nav-request">
+                    <a href="#request-service">
+                        Request Service
+                    </a>
+                </li>
+
             </ul>
+
         </nav>
+
     </header>
 
-    <!-- Hero Section -->
-<section id="home" class="hero">
-    <div class="overlay"></div>
-    <div class="hero-content">
 
-        <h1>KHAN Electrical & Electronics Solutions</h1>
+    <main>
 
-        <p>
-            Electrical Installation • Electronics Repair • Embedded Systems • IoT Solutions
-        </p>
-        <div class="hero-buttons">
-            <a href="#services" class="btn">View Services</a>
+        <!-- =========================
+             HERO
+        ========================== -->
+        <section id="home" class="hero">
 
-            <a href="https://wa.me/255764094983?text=Hello%20I%20need%20your%20electrical%20services" target="_blank" class="btn whatsapp">
-                WhatsApp Me
-            </a>
-        </div>
-        <div class="social-icons">
-            <a href="https://linkedin.com/in/yona-kamwela-13ab02415"><i class="fab fa-linkedin"></i></a>
-            <a href="https://instagram.com/loykhany"><i class="fab fa-instagram"></i></a>
-            <a href="https://github.com/KHAN-JR"><i class="fab fa-github"></i></a>
-            <a href="https://wa.me/255764094983" target="_blank"><i class="fab fa-whatsapp"></i></a>
-        </div>
-    </div>
-</section>
-    
-    <!-- About Section -->
-<section id="about" class="about">
-    <div class="about-container">
-        <div class="about-image">
-            <img src="images/markup_116902 (5).png" alt="Profile Image">
-        </div>
-        <div class="about-content">
-            <h2>About Me</h2>
-            <p>
-                I am an Electrical & Electronics Specialist with experience in
-                domestic appliance repair, electrical installation, embedded systems,
-                PCB design, and IoT solutions.
-            </p>
-            <div class="skills">
-                <div class="skill">
-                    <span>Electrical Installation</span>
-                    <div class="bar"><div class="fill" style="width:95%"></div></div>
-                </div>
-                <div class="skill">
-                    <span>Electronics Repair</span>
-                    <div class="bar"><div class="fill" style="width:90%"></div></div>
-                </div>
-                <div class="skill">
-                    <span>Embedded Systems (ESP32/Arduino)</span>
-                    <div class="bar"><div class="fill" style="width:85%"></div></div>
-                </div>
-                <div class="skill">
-                    <span>PCB Design</span>
-                    <div class="bar"><div class="fill" style="width:80%"></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+            <div class="hero-grid"></div>
+            <div class="hero-glow"></div>
 
-  <!-- Services Section -->
-<section id="services" class="services">
-    <h2>My Services</h2>
-    <div class="services-container">
-        <div class="service-card">
-            <i class="fas fa-bolt"></i>
-            <h3>Electrical Installation</h3>
-            <p>House wiring, fault finding, maintenance and electrical system installation.</p>
-        </div>
-        <div class="service-card">
-            <i class="fas fa-microchip"></i>
-            <h3>Electronics Repair</h3>
-            <p>Repairing appliances, circuit troubleshooting and PCB diagnosis.</p>
-        </div>
-        <div class="service-card">
-            <i class="fas fa-robot"></i>
-            <h3>Embedded Systems</h3>
-            <p>Arduino, ESP32, ESP8266 and IoT smart systems development.</p>
-        </div>
-        <div class="service-card">
-            <i class="fas fa-code"></i>
-            <h3>Digital Electronics</h3>
-            <p>Logic gates, counters, flip-flops and microcontroller systems.</p>
-        </div>
-    </div>
-</section>
-  
-  <!-- Projects Section -->
-<section id="projects" class="projects">
-    <h2>My Projects</h2>
-    <div class="projects-container">
-        <div class="project-card">
-            <img src="images/Esp32.jpg" alt="Project">
-            <div class="project-info">
-                <h3>Smart Ventilation System</h3>
-                <p>Automatic fan control using ESP32 and temperature sensor.</p>
-                <span>ESP32 • DHT11 • Relay</span>
-            </div>
-        </div>
-        <div class="project-card">
-            <img src="images/boards.jpg" alt="Project">
-            <div class="project-info">
-                <h3>Home Wiring Installation</h3>
-                <p>Complete residential electrical wiring and safety system setup.</p>
-                <span>Electrical • Distribution Board</span>
-            </div>
-        </div>
-        <div class="project-card">
-            <img src="images/IOT.jpg" alt="Project">
-            <div class="project-info">
-                <h3>IoT Temperature Monitor</h3>
-                <p>Real-time temperature monitoring system using ESP8266.</p>
-                <span>ESP8266 • IoT • Web Dashboard</span>
-            </div>
-        </div>
-        <div class="project-card">
-            <img src="images/wiring.jpg" alt="Project">
-            <div class="project-info">
-                <h3>Electronics Repair Work</h3>
-                <p>Fault diagnosis and repair of domestic appliances.</p>
-                <span>PCB • Troubleshooting • Soldering</span>
-            </div>
-        </div>
-    </div>
-</section>
-    <!-- Project gallery -->
-    <section id="gallery" class="gallery">
-    <h2>Project Gallery</h2>
-    <div class="gallery-container">
-        <img src="images/project1.jpg" alt="Project 1">
-        <img src="images/project2.jpg" alt="Project 2">
-        <img src="images/project3.jpg" alt="Project 3">
-        <img src="images/project4.jpg" alt="Project 4">
-        <img src="images/project5.jpg" alt="Project 5">
-        <img src="images/project6.jpg" alt="Project 6">
-    </div>
-</section>
-<!-- Lightbox -->
-<div id="lightbox">
-    <span id="close-btn">&times;</span>
-    <img id="lightbox-img">
-</div>
-    <!-- Contact Section -->
-<section id="contact" class="contact">
-    <h2>Contact Me</h2>
-    <div class="contact-container">
+            <div class="hero-content">
 
-        <!-- Contact Info -->
-        <div class="contact-info">
-            <div class="info-box">
-                <i class="fas fa-phone"></i>
-                <div>
-                    <h3>Phone</h3>
-                    <p>+255 764 094 983</p>
-                </div>
-            </div>
-            <div class="info-box">
-                <i class="fas fa-envelope"></i>
-                <div>
-                    <h3>Email</h3>
-                    <p>yonakamwela81@gmail.com</p>
-                </div>
-            </div>
-            <div class="info-box">
-                <i class="fas fa-location-dot"></i>
-                <div>
-                    <h3>Location</h3>
-                    <p>Dar es Salaam, Tanzania</p>
-                </div>
-            </div>
-        </div>
+                <span class="hero-badge">
+                    <i class="fas fa-microchip"></i>
+                    ENGINEERING • TECHNOLOGY • INNOVATION
+                </span>
 
-        <!-- Contact Form -->
-        <form id="contact-form" class="contact-form" data-netlify="true">
-            <input name="name" type="text" placeholder="Your Name" required>
-            <input name="email" type="email" placeholder="Your Email" required>
-            <input type="text" name="company" style="display:none">
-            <textarea name="message" rows="6" placeholder="Your Message...." required></textarea>
-            <button type="submit">
-                Send Message
+                <h1>
+                    KHAN
+                    <span>Solutions</span>
+                </h1>
+
+                <h2>
+                    Electrical • Electronics • Embedded • Software
+                </h2>
+
+                <p>
+                    Building practical technology solutions through
+                    electrical engineering, electronics, embedded systems,
+                    IoT and software development.
+                </p>
+
+                <div class="hero-buttons">
+
+                    <a href="#services" class="btn btn-primary">
+                        <i class="fas fa-layer-group"></i>
+                        Explore Services
+                    </a>
+
+                    <a href="#request-service" class="btn btn-outline">
+                        <i class="fas fa-paper-plane"></i>
+                        Request a Service
+                    </a>
+
+                </div>
+
+                <div class="social-icons">
+
+                    <a href="https://linkedin.com/in/yona-kamwela-13ab02415"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="LinkedIn">
+
+                        <i class="fab fa-linkedin"></i>
+
+                    </a>
+
+                    <a href="https://instagram.com/loykhany"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="Instagram">
+
+                        <i class="fab fa-instagram"></i>
+
+                    </a>
+
+                    <a href="https://github.com/KHAN-JR"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="GitHub">
+
+                        <i class="fab fa-github"></i>
+
+                    </a>
+
+                    <a href="https://wa.me/255764094983"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="WhatsApp">
+
+                        <i class="fab fa-whatsapp"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="hero-scroll">
+                <span>Scroll to explore</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             ABOUT
+        ========================== -->
+        <section id="about" class="about section">
+
+            <div class="section-heading">
+
+                <span class="section-label">
+                    WHO I AM
+                </span>
+
+                <h2>
+                    Engineering
+                    <span>With Purpose</span>
+                </h2>
+
+                <p>
+                    Combining electrical engineering, electronics,
+                    embedded systems and software to solve real-world
+                    technical problems.
+                </p>
+
+            </div>
+
+            <div class="about-container">
+
+                <div class="about-image">
+
+                    <div class="image-frame">
+
+                        <img
+                            src="images/markup_116902 (5).png"
+                            alt="Yona Kamwela - KHAN Solutions"
+                            loading="lazy">
+
+                    </div>
+
+                    <div class="image-decoration decoration-one"></div>
+                    <div class="image-decoration decoration-two"></div>
+
+                </div>
+
+                <div class="about-content">
+
+                    <span class="content-label">
+                        ABOUT KHAN SOLUTIONS
+                    </span>
+
+                    <h3>
+                        From circuits to intelligent systems.
+                    </h3>
+
+                    <p>
+                        I am an Electrical & Electronics Specialist
+                        working across domestic electrical systems,
+                        electronics repair, embedded systems, PCB
+                        design and IoT solutions.
+                    </p>
+
+                    <p>
+                        My focus is practical engineering — understanding
+                        the problem, designing the solution and building
+                        technology that can actually work in the real world.
+                    </p>
+
+                    <div class="about-highlights">
+
+                        <div>
+                            <i class="fas fa-bolt"></i>
+                            <span>Electrical</span>
+                        </div>
+
+                        <div>
+                            <i class="fas fa-microchip"></i>
+                            <span>Electronics</span>
+                        </div>
+
+                        <div>
+                            <i class="fas fa-robot"></i>
+                            <span>Embedded</span>
+                        </div>
+
+                        <div>
+                            <i class="fas fa-code"></i>
+                            <span>Software</span>
+                        </div>
+
+                    </div>
+
+                    <a href="#request-service" class="text-link">
+                        Work with me
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- Skills -->
+
+            <div class="skills-wrapper">
+
+                <div class="skills-header">
+
+                    <span class="section-label">
+                        TECHNICAL SKILLS
+                    </span>
+
+                    <h3>
+                        What I Work With
+                    </h3>
+
+                </div>
+
+                <div class="skills">
+
+                    <div class="skill">
+
+                        <div class="skill-title">
+                            <span>Electrical Installation</span>
+                            <strong>95%</strong>
+                        </div>
+
+                        <div class="bar">
+                            <div class="fill" style="width:95%"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="skill">
+
+                        <div class="skill-title">
+                            <span>Electronics Repair</span>
+                            <strong>90%</strong>
+                        </div>
+
+                        <div class="bar">
+                            <div class="fill" style="width:90%"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="skill">
+
+                        <div class="skill-title">
+                            <span>Embedded Systems</span>
+                            <strong>85%</strong>
+                        </div>
+
+                        <div class="bar">
+                            <div class="fill" style="width:85%"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="skill">
+
+                        <div class="skill-title">
+                            <span>PCB Design</span>
+                            <strong>80%</strong>
+                        </div>
+
+                        <div class="bar">
+                            <div class="fill" style="width:80%"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="skill">
+
+                        <div class="skill-title">
+                            <span>Software Development</span>
+                            <strong>75%</strong>
+                        </div>
+
+                        <div class="bar">
+                            <div class="fill" style="width:75%"></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             SERVICES
+        ========================== -->
+        <section id="services" class="services section">
+
+            <div class="section-heading">
+
+                <span class="section-label">
+                    WHAT I OFFER
+                </span>
+
+                <h2>
+                    Professional
+                    <span>Services</span>
+                </h2>
+
+                <p>
+                    Select the area where you need technical assistance.
+                </p>
+
+            </div>
+
+
+            <div class="services-container">
+
+                <!-- Electrical -->
+
+                <article class="service-card">
+
+                    <div class="service-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+
+                    <span class="service-number">01</span>
+
+                    <h3>
+                        Electrical
+                    </h3>
+
+                    <p>
+                        Electrical installation, house wiring,
+                        fault finding, maintenance and electrical
+                        system solutions.
+                    </p>
+
+                    <a href="#request-service"
+                       class="service-link"
+                       data-service="Electrical">
+
+                        Request this service
+                        <i class="fas fa-arrow-right"></i>
+
+                    </a>
+
+                </article>
+
+
+                <!-- Electronics -->
+
+                <article class="service-card">
+
+                    <div class="service-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+
+                    <span class="service-number">02</span>
+
+                    <h3>
+                        Electronics
+                    </h3>
+
+                    <p>
+                        Electronics troubleshooting, PCB diagnosis,
+                        appliance repair, component-level analysis
+                        and soldering work.
+                    </p>
+
+                    <a href="#request-service"
+                       class="service-link"
+                       data-service="Electronics">
+
+                        Request this service
+                        <i class="fas fa-arrow-right"></i>
+
+                    </a>
+
+                </article>
+
+
+                <!-- Embedded -->
+
+                <article class="service-card">
+
+                    <div class="service-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+
+                    <span class="service-number">03</span>
+
+                    <h3>
+                        Embedded Systems
+                    </h3>
+
+                    <p>
+                        Arduino, ESP32, ESP8266, IoT, sensors,
+                        automation, monitoring and microcontroller
+                        system development.
+                    </p>
+
+                    <a href="#request-service"
+                       class="service-link"
+                       data-service="Embedded Systems">
+
+                        Request this service
+                        <i class="fas fa-arrow-right"></i>
+
+                    </a>
+
+                </article>
+
+
+                <!-- Software -->
+
+                <article class="service-card">
+
+                    <div class="service-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+
+                    <span class="service-number">04</span>
+
+                    <h3>
+                        Software
+                    </h3>
+
+                    <p>
+                        Websites, web systems, databases, APIs,
+                        automation software and technology-based
+                        software solutions.
+                    </p>
+
+                    <a href="#request-service"
+                       class="service-link"
+                       data-service="Software">
+
+                        Request this service
+                        <i class="fas fa-arrow-right"></i>
+
+                    </a>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             SERVICE REQUEST
+             UI FOUNDATION
+        ========================== -->
+        <section id="request-service" class="request-section section">
+
+            <div class="request-container">
+
+                <div class="request-intro">
+
+                    <span class="section-label">
+                        START A PROJECT
+                    </span>
+
+                    <h2>
+                        Need a
+                        <span>Technical Solution?</span>
+                    </h2>
+
+                    <p>
+                        Tell me what you need. Choose the service category
+                        that best matches your project and provide the
+                        important details.
+                    </p>
+
+                    <div class="request-features">
+
+                        <div>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Electrical solutions</span>
+                        </div>
+
+                        <div>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Electronics troubleshooting</span>
+                        </div>
+
+                        <div>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Embedded & IoT development</span>
+                        </div>
+
+                        <div>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Software development</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="request-card">
+
+                    <div class="request-card-header">
+
+                        <span class="request-step">
+                            STEP 01
+                        </span>
+
+                        <h3>
+                            Choose Your Service
+                        </h3>
+
+                    </div>
+
+                    <!--
+                        This form is currently UI only.
+                        Backend/database connection will be added
+                        in the next implementation phase.
+                    -->
+
+                    <form id="service-request-form"
+                          class="service-request-form">
+
+                        <div class="form-group">
+
+                            <label for="service-type">
+                                Service Required
+                            </label>
+
+                            <select id="service-type"
+                                    name="service"
+                                    required>
+
+                                <option value="">
+                                    Select a service
+                                </option>
+
+                                <option value="Electrical">
+                                    Electrical
+                                </option>
+
+                                <option value="Electronics">
+                                    Electronics
+                                </option>
+
+                                <option value="Embedded Systems">
+                                    Embedded Systems
+                                </option>
+
+                                <option value="Software">
+                                    Software
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="request-name">
+                                    Full Name
+                                </label>
+
+                                <input
+                                    id="request-name"
+                                    name="name"
+                                    type="text"
+                                    placeholder="Your full name"
+                                    autocomplete="name"
+                                    required>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="request-phone">
+                                    Phone
+                                </label>
+
+                                <input
+                                    id="request-phone"
+                                    name="phone"
+                                    type="tel"
+                                    placeholder="+255..."
+                                    autocomplete="tel"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="request-email">
+                                Email
+                            </label>
+
+                            <input
+                                id="request-email"
+                                name="email"
+                                type="email"
+                                placeholder="your@email.com"
+                                autocomplete="email"
+                                required>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="request-title">
+                                Project / Service Title
+                            </label>
+
+                            <input
+                                id="request-title"
+                                name="title"
+                                type="text"
+                                placeholder="Example: House wiring / ESP32 project / Website"
+                                required>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="request-message">
+                                Describe What You Need
+                            </label>
+
+                            <textarea
+                                id="request-message"
+                                name="message"
+                                rows="5"
+                                placeholder="Explain the problem, project or service you need..."
+                                required></textarea>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="request-location">
+                                    Location
+                                </label>
+
+                                <input
+                                    id="request-location"
+                                    name="location"
+                                    type="text"
+                                    placeholder="City / Area">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="request-urgency">
+                                    Urgency
+                                </label>
+
+                                <select
+                                    id="request-urgency"
+                                    name="urgency">
+
+                                    <option value="Normal">
+                                        Normal
+                                    </option>
+
+                                    <option value="Urgent">
+                                        Urgent
+                                    </option>
+
+                                    <option value="Emergency">
+                                        Emergency
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary request-submit">
+
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Service Request
+
+                        </button>
+
+                        <p id="request-status"
+                           class="request-status"
+                           aria-live="polite"></p>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             PROJECTS
+        ========================== -->
+        <section id="projects" class="projects section">
+
+            <div class="section-heading">
+
+                <span class="section-label">
+                    SELECTED WORK
+                </span>
+
+                <h2>
+                    My
+                    <span>Projects</span>
+                </h2>
+
+                <p>
+                    Practical engineering and technology projects.
+                </p>
+
+            </div>
+
+
+            <div class="projects-container">
+
+                <article class="project-card">
+
+                    <div class="project-image">
+
+                        <img
+                            src="images/Esp32.jpg"
+                            alt="ESP32 Smart Ventilation System"
+                            loading="lazy">
+
+                        <span class="project-category">
+                            EMBEDDED
+                        </span>
+
+                    </div>
+
+                    <div class="project-info">
+
+                        <h3>
+                            Smart Ventilation System
+                        </h3>
+
+                        <p>
+                            Automatic fan control using ESP32
+                            and temperature sensing.
+                        </p>
+
+                        <span>
+                            ESP32 • DHT11 • Relay
+                        </span>
+
+                    </div>
+
+                </article>
+
+
+                <article class="project-card">
+
+                    <div class="project-image">
+
+                        <img
+                            src="images/boards.jpg"
+                            alt="Residential electrical installation"
+                            loading="lazy">
+
+                        <span class="project-category">
+                            ELECTRICAL
+                        </span>
+
+                    </div>
+
+                    <div class="project-info">
+
+                        <h3>
+                            Home Wiring Installation
+                        </h3>
+
+                        <p>
+                            Residential electrical wiring and
+                            distribution system setup.
+                        </p>
+
+                        <span>
+                            Electrical • Distribution Board
+                        </span>
+
+                    </div>
+
+                </article>
+
+
+                <article class="project-card">
+
+                    <div class="project-image">
+
+                        <img
+                            src="images/IOT.jpg"
+                            alt="IoT temperature monitoring system"
+                            loading="lazy">
+
+                        <span class="project-category">
+                            IoT
+                        </span>
+
+                    </div>
+
+                    <div class="project-info">
+
+                        <h3>
+                            IoT Temperature Monitor
+                        </h3>
+
+                        <p>
+                            Real-time temperature monitoring
+                            using ESP8266.
+                        </p>
+
+                        <span>
+                            ESP8266 • IoT • Web Dashboard
+                        </span>
+
+                    </div>
+
+                </article>
+
+
+                <article class="project-card">
+
+                    <div class="project-image">
+
+                        <img
+                            src="images/wiring.jpg"
+                            alt="Electronics repair work"
+                            loading="lazy">
+
+                        <span class="project-category">
+                            ELECTRONICS
+                        </span>
+
+                    </div>
+
+                    <div class="project-info">
+
+                        <h3>
+                            Electronics Repair Work
+                        </h3>
+
+                        <p>
+                            Fault diagnosis and repair of
+                            electronic appliances.
+                        </p>
+
+                        <span>
+                            PCB • Troubleshooting • Soldering
+                        </span>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             GALLERY
+        ========================== -->
+        <section id="gallery" class="gallery section">
+
+            <div class="section-heading">
+
+                <span class="section-label">
+                    WORK IN ACTION
+                </span>
+
+                <h2>
+                    Project
+                    <span>Gallery</span>
+                </h2>
+
+            </div>
+
+            <div class="gallery-container">
+
+                <img src="images/project1.jpg"
+                     alt="KHAN project 1"
+                     loading="lazy">
+
+                <img src="images/project2.jpg"
+                     alt="KHAN project 2"
+                     loading="lazy">
+
+                <img src="images/project3.jpg"
+                     alt="KHAN project 3"
+                     loading="lazy">
+
+                <img src="images/project4.jpg"
+                     alt="KHAN project 4"
+                     loading="lazy">
+
+                <img src="images/project5.jpg"
+                     alt="KHAN project 5"
+                     loading="lazy">
+
+                <img src="images/project6.jpg"
+                     alt="KHAN project 6"
+                     loading="lazy">
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             LIGHTBOX
+        ========================== -->
+        <div id="lightbox"
+             role="dialog"
+             aria-modal="true"
+             aria-label="Project image preview">
+
+            <button id="close-btn"
+                    type="button"
+                    aria-label="Close image preview">
+
+                &times;
+
             </button>
-        </form>
-        <p id="status-message"></p>
-    </div>
-</section>
-       
-<a
-    href="https://wa.me/255764094983"
-    class="whatsapp-float"
-    target="_blank">
-    <i class="fab fa-whatsapp"></i>
-</a>
+
+            <img id="lightbox-img"
+                 src=""
+                 alt="Project preview">
+
+        </div>
+
+
+        <!-- =========================
+             CONTACT
+        ========================== -->
+        <section id="contact" class="contact section">
+
+            <div class="section-heading">
+
+                <span class="section-label">
+                    GET IN TOUCH
+                </span>
+
+                <h2>
+                    Let's Build
+                    <span>Something</span>
+                </h2>
+
+                <p>
+                    For general enquiries, collaborations or technical
+                    discussions, use the contact details below.
+                </p>
+
+            </div>
+
+
+            <div class="contact-container">
+
+                <div class="contact-info">
+
+                    <a href="tel:+255764094983"
+                       class="info-box">
+
+                        <i class="fas fa-phone"></i>
+
+                        <div>
+                            <h3>Phone</h3>
+                            <p>+255 764 094 983</p>
+                        </div>
+
+                    </a>
+
+
+                    <a href="mailto:yonakamwela81@gmail.com"
+                       class="info-box">
+
+                        <i class="fas fa-envelope"></i>
+
+                        <div>
+                            <h3>Email</h3>
+                            <p>yonakamwela81@gmail.com</p>
+                        </div>
+
+                    </a>
+
+
+                    <div class="info-box">
+
+                        <i class="fas fa-location-dot"></i>
+
+                        <div>
+                            <h3>Location</h3>
+                            <p>Dar es Salaam, Tanzania</p>
+                        </div>
+
+                    </div>
+
+
+                    <a href="https://wa.me/255764094983"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="contact-whatsapp">
+
+                        <i class="fab fa-whatsapp"></i>
+
+                        Chat on WhatsApp
+
+                    </a>
+
+                </div>
+
+
+                <!-- Existing general contact form -->
+
+                <form id="contact-form"
+                      class="contact-form"
+                      data-netlify="true">
+
+                    <input
+                        type="hidden"
+                        name="form-name"
+                        value="contact-form">
+
+                    <input
+                        name="name"
+                        type="text"
+                        placeholder="Your Name"
+                        autocomplete="name"
+                        required>
+
+                    <input
+                        name="email"
+                        type="email"
+                        placeholder="Your Email"
+                        autocomplete="email"
+                        required>
+
+                    <!-- Honeypot -->
+                    <input
+                        type="text"
+                        name="company"
+                        tabindex="-1"
+                        autocomplete="off"
+                        class="honeypot">
+
+                    <textarea
+                        name="message"
+                        rows="6"
+                        placeholder="Your Message..."
+                        required></textarea>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="fas fa-paper-plane"></i>
+                        Send Message
+
+                    </button>
+
+                    <p id="status-message"
+                       aria-live="polite"></p>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         FLOATING WHATSAPP
+    ========================== -->
+    <a href="https://wa.me/255764094983"
+       class="whatsapp-float"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Chat with KHAN Solutions on WhatsApp">
+
+        <i class="fab fa-whatsapp"></i>
+
+    </a>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+    <footer>
+
+        <div class="footer-content">
+
+            <div>
+                <strong>KHAN Solutions</strong>
+
+                <p>
+                    Electrical • Electronics • Embedded • Software
+                </p>
+            </div>
+
+            <div class="footer-links">
+
+                <a href="#home">Home</a>
+                <a href="#services">Services</a>
+                <a href="#projects">Projects</a>
+                <a href="#request-service">Request Service</a>
+
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+
+            <p>
+                &copy; 2026 KHAN Electrical & Electronics Solutions.
+                All Rights Reserved.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- EmailJS -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-<script src="script.js"></script>
-    <footer>
-    <p>
-        &copy; 2026 KHAN Electrical & Electronics Solutions.
-        All Rights Reserved.
-    </p>
-</footer>
+    <!-- Existing JavaScript -->
+    <script src="script.js"></script>
+
 </body>
 </html>
