@@ -1,4 +1,3 @@
-
 /* =========================================================
    KHAN SOLUTIONS — PORTFOLIO V2
    FINAL FRONTEND CONTROLLER
@@ -7,12 +6,11 @@
 "use strict";
 
 
-/* ==========================================================
+/* =========================================================
    01. DOM READY
-   ========================================================== */
+   ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-
     initLoader();
     initMobileNavigation();
     initActiveNavigation();
@@ -785,7 +783,7 @@ function updateServiceFields(service) {
    08. SERVICE REQUEST FORM
    ========================================================= */
 
-  function initServiceRequestForm() {
+function initServiceRequestForm() {
     const form = document.getElementById("service-request-form");
 
     if (!form) return;
@@ -1015,10 +1013,6 @@ function updateServiceFields(service) {
         }
     });
 }
-        
-
-          
-            
 /* =========================================================
    09. REQUEST STATUS
    ========================================================= */
