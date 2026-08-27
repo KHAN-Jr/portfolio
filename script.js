@@ -809,7 +809,6 @@ function updateServiceFields(service) {
 
         const now = Date.now();
 
-        // Prevent rapid repeated submissions
         if (now - lastSubmissionTime < 10000) {
             status.textContent =
                 "Please wait a few seconds before submitting another request.";
@@ -817,13 +816,11 @@ function updateServiceFields(service) {
             return;
         }
 
-        // Native HTML validation
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
         }
 
-        // Clean input values
         const service = serviceType.value.trim();
         const name = requestName.value.trim();
         const email = requestEmail.value.trim();
@@ -833,7 +830,6 @@ function updateServiceFields(service) {
         const location = requestLocation.value.trim();
         const urgency = requestUrgency.value;
 
-        // Additional validation
         if (!service || !name || !email || !phone || !title || !message) {
             status.textContent =
                 "Please complete all required fields.";
@@ -841,7 +837,6 @@ function updateServiceFields(service) {
             return;
         }
 
-        // Email format validation
         const emailPattern =
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -853,7 +848,6 @@ function updateServiceFields(service) {
             return;
         }
 
-        // Basic phone validation
         const phonePattern =
             /^[0-9+\-\s()]{7,20}$/;
 
@@ -865,7 +859,6 @@ function updateServiceFields(service) {
             return;
         }
 
-        // Reasonable length limits
         if (name.length > 100) {
             status.textContent =
                 "Full name is too long.";
@@ -894,7 +887,6 @@ function updateServiceFields(service) {
             return;
         }
 
-        // Lock submission
         submitButton.disabled = true;
         lastSubmissionTime = now;
 
@@ -904,9 +896,20 @@ function updateServiceFields(service) {
         `;
 
         status.textContent =
-            "Sending your service request...";
+            "Submitting your service request...";
         status.className =
             "request-status";
+
+        const backendData = {
+            service: service,
+            name: name,
+            email: email,
+            phone: phone,
+            title: title,
+            message: message,
+            location: location,
+            urgency: urgency
+        };
 
         const templateParams = {
             service_type: service,
@@ -921,14 +924,63 @@ function updateServiceFields(service) {
         };
 
         try {
-            await emailjs.send(
-                "service_jngw8ge",
-                "template_m3h6xvf",
-                templateParams
+            /*
+             * PHASE 2
+             * Save request to MariaDB through PHP backend.
+             */
+            const response = await fetch(
+                "api/service-request.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(backendData)
+                }
             );
 
-            status.textContent =
-                "Service request sent successfully. Thank you!";
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message ||
+                    "Unable to save service request."
+                );
+            }
+
+            /*
+             * PHASE 1
+             * Send email notification after database
+             * successfully accepts the request.
+             */
+            try {
+                await emailjs.send(
+                    "service_jngw8ge",
+                    "template_m3h6xvf",
+                    templateParams
+                );
+
+                status.textContent =
+                    `Service request #${result.request_id} submitted successfully. Thank you!`;
+
+            } catch (emailError) {
+                console.error(
+                    "Service Request EmailJS Error:",
+                    emailError
+                );
+
+                /*
+                 * Database already contains the request.
+                 * Therefore do not tell the client that
+                 * the complete request was lost.
+                 */
+                status.textContent =
+                    `Service request #${result.request_id} was received successfully.`;
+
+                console.warn(
+                    "Request was saved to database, but email notification failed."
+                );
+            }
 
             status.className =
                 "request-status success";
@@ -937,17 +989,20 @@ function updateServiceFields(service) {
 
         } catch (error) {
             console.error(
-                "Service Request EmailJS Error:",
+                "Service Request Backend Error:",
                 error
             );
 
             status.textContent =
-                "Unable to send your request right now. Please try again.";
+                error.message ||
+                "Unable to submit your service request right now. Please try again.";
 
             status.className =
                 "request-status error";
 
-            // Allow retry after a failed request
+            /*
+             * Allow retry after backend failure.
+             */
             lastSubmissionTime = 0;
 
         } finally {
@@ -960,6 +1015,9 @@ function updateServiceFields(service) {
         }
     });
 }
+        
+
+          
             
 /* =========================================================
    09. REQUEST STATUS
