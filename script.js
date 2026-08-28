@@ -927,7 +927,7 @@ function initServiceRequestForm() {
              * Save request to MariaDB through PHP backend.
              */
             const response = await fetch(
-                "api/service-request.php",
+                "https://khan-solutions-8.infinityfreeapp.com/api/service-request.php",
                 {
                     method: "POST",
                     headers: {
