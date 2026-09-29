@@ -1,24 +1,25 @@
-# Environment / secrets
+# Production secrets
+config/database.php
+
+# Database backups / dumps
+*.sql
+*.sql.gz
+
+# Temporary database test
+db-test.php
+
+# PHP backup files
+*.backup
+*.v1-backup
+*.v2-backup
+*.before-identity-hardening
+*.before-final-ui
+
+# Private uploads
+khan uploads/
+
+# Local/private files
 .env
 .env.*
-!.env.example
-
-# Local database files
-*.sqlite
-*.sqlite3
-*.db
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Editor / IDE
-.vscode/
-.idea/
-
-# Temporary files
-*.tmp
-*.temp
+user/*.before-css-cleanup
+user/*.before-client-css

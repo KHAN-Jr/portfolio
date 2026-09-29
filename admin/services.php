@@ -16,7 +16,11 @@ require_once __DIR__ . "/../config/database.php";
 
 $services = [];
 $error = "";
+$successMessage = $_SESSION["service_success"] ?? "";
+$serviceError = $_SESSION["service_error"] ?? "";
 
+unset($_SESSION["service_success"]);
+unset($_SESSION["service_error"]);
 try {
 
     $stmt = $pdo->query(
@@ -135,7 +139,62 @@ try {
             margin: 0;
             color: #6b7280;
         }
+        .add-service {
+            display: inline-block;
+            margin-bottom: 10px;
+            padding: 10px 14px;
+            background: #111827;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+        }
 
+            .add-service:hover {
+                opacity: 0.9;
+            }
+         .service-actions {
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid #e5e7eb;
+            }
+            
+            .service-actions a {
+                display: inline-block;
+                padding: 9px 13px;
+                background: #111827;
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 7px;
+                font-weight: 600;
+                font-size: 14px;
+            }
+            
+            .service-actions a:hover {
+                opacity: 0.9;
+            }
+           .service-actions form {
+                    display: inline;
+                }
+                
+                .status-button {
+                    padding: 9px 13px;
+                    border: 0;
+                    border-radius: 7px;
+                    font-weight: 600;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
+                
+                .status-button.deactivate {
+                    background: #fee2e2;
+                    color: #991b1b;
+                }
+                
+                .status-button.activate {
+                    background: #dcfce7;
+                    color: #166534;
+                }
         .count {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -226,7 +285,15 @@ try {
             line-height: 1.6;
             color: #4b5563;
         }
-
+       .alert.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
         .empty {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -326,7 +393,12 @@ try {
             </p>
 
         </div>
-
+         <a
+            href="add-service.php"
+            class="add-service"
+        >
+            + Add Service
+        </a>
         <div class="count">
 
             <?= count($services) ?>
@@ -337,7 +409,34 @@ try {
 
     </div>
 
+     <?php if ($successMessage !== ""): ?>
 
+    <div class="alert success">
+
+        <?= htmlspecialchars(
+            $successMessage,
+            ENT_QUOTES,
+            "UTF-8"
+        ) ?>
+
+    </div>
+
+<?php endif; ?>
+
+
+<?php if ($serviceError !== ""): ?>
+
+    <div class="alert error">
+
+        <?= htmlspecialchars(
+            $serviceError,
+            ENT_QUOTES,
+            "UTF-8"
+        ) ?>
+
+    </div>
+
+<?php endif; ?>
     <?php if ($error !== ""): ?>
 
         <div class="alert">
@@ -504,7 +603,65 @@ try {
                         </span>
 
                     </div>
+                     <div class="service-actions">
 
+                        <a
+                            href="service-details.php?id=<?= (int) $service["id"] ?>"
+                        >
+                            View Details
+                        </a>
+                    
+                        <a
+                            href="edit-service.php?id=<?= (int) $service["id"] ?>"
+                        >
+                            Edit Service
+                        </a>
+                    
+                        <form
+                            method="POST"
+                            action="toggle-service-status.php"
+                            style="display: inline;"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="<?= htmlspecialchars(
+                                    csrfToken(),
+                                    ENT_QUOTES,
+                                    "UTF-8"
+                                ) ?>"
+                            >
+                    
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= (int) $service["id"] ?>"
+                            >
+                    
+                            <?php if ((int) $service["is_active"] === 1): ?>
+                    
+                                <button
+                                    type="submit"
+                                    class="status-button deactivate"
+                                >
+                                    Deactivate
+                                </button>
+                    
+                            <?php else: ?>
+                    
+                                <button
+                                    type="submit"
+                                    class="status-button activate"
+                                >
+                                    Activate
+                                </button>
+                    
+                            <?php endif; ?>
+                    
+                        </form>
+                    
+                    </div>
+                    </div>
                 </article>
 
             <?php endforeach; ?>

@@ -898,16 +898,16 @@ function initServiceRequestForm() {
         status.className =
             "request-status";
 
-        const backendData = {
-            service: service,
-            name: name,
-            email: email,
-            phone: phone,
-            title: title,
-            message: message,
-            location: location,
-            urgency: urgency
-        };
+        const formData = new FormData(form);
+
+formData.set("service", service);
+formData.set("name", name);
+formData.set("email", email);
+formData.set("phone", phone);
+formData.set("title", title);
+formData.set("message", message);
+formData.set("location", location);
+formData.set("urgency", urgency);
 
         const templateParams = {
             service_type: service,
@@ -930,10 +930,7 @@ function initServiceRequestForm() {
                 "https://khan-solutions-8.infinityfreeapp.com/api/service-request.php",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(backendData)
+                    body: formData
                 }
             );
 

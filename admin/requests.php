@@ -14,8 +14,15 @@ if (
 require_once __DIR__ . "/../config/database.php";
 
 $requests = [];
+$services = [];
 $error = "";
 $success = "";
+
+/*
+|--------------------------------------------------------------------------
+| Flash messages
+|--------------------------------------------------------------------------
+*/
 
 if (isset($_GET["status"])) {
 
@@ -28,40 +35,57 @@ if (isset($_GET["status"])) {
     }
 }
 
-try {
+/*
+|--------------------------------------------------------------------------
+| Filters
+|--------------------------------------------------------------------------
+*/
 
-    $stmt = $pdo->query(
-        "SELECT
-            sr.id,
-            sr.title,
-            sr.description,
-            sr.location,
-            sr.urgency,
-            sr.status,
-            sr.created_at,
-            sr.updated_at,
-            u.full_name,
-            u.email,
-            u.phone,
-            s.name AS service_name
-         FROM service_requests sr
-         INNER JOIN users u
-            ON u.id = sr.user_id
-         INNER JOIN services s
-            ON s.id = sr.service_id
-         ORDER BY sr.created_at DESC"
-    );
+$search = trim($_GET["search"] ?? "");
+$filterStatus = trim($_GET["filter_status"] ?? "");
+$filterService = trim($_GET["service_id"] ?? "");
+$filterUrgency = trim($_GET["urgency"] ?? "");
 
-    $requests = $stmt->fetchAll();
+$page = filter_input(
+    INPUT_GET,
+    "page",
+    FILTER_VALIDATE_INT
+);
 
-} catch (Throwable $e) {
+$page = $page && $page > 0 ? $page : 1;
 
-    error_log(
-        "Admin Requests Error: " . $e->getMessage()
-    );
+$perPage = 10;
 
-    $error = "Unable to load service requests.";
+$allowedStatuses = [
+    "pending",
+    "in_progress",
+    "completed",
+    "cancelled"
+];
+
+$allowedUrgencies = [
+    "low",
+    "medium",
+    "high"
+];
+
+if (!in_array($filterStatus, $allowedStatuses, true)) {
+    $filterStatus = "";
 }
+
+if (!in_array($filterUrgency, $allowedUrgencies, true)) {
+    $filterUrgency = "";
+}
+
+if ($filterService !== "" && !ctype_digit($filterService)) {
+    $filterService = "";
+}
+
+/*
+|--------------------------------------------------------------------------
+| Helper functions
+|--------------------------------------------------------------------------
+*/
 
 function statusLabel(string $status): string
 {
@@ -78,9 +102,229 @@ function urgencyLabel(string $urgency): string
     return ucfirst($urgency);
 }
 
+function cleanOutput($value): string
+{
+    return htmlspecialchars(
+        (string) ($value ?? ""),
+        ENT_QUOTES,
+        "UTF-8"
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Load services for filter
+|--------------------------------------------------------------------------
+*/
+
+try {
+
+    $serviceStmt = $pdo->query(
+        "SELECT
+            id,
+            name
+         FROM services
+         ORDER BY name ASC"
+    );
+
+    $services = $serviceStmt->fetchAll();
+
+} catch (Throwable $e) {
+
+    error_log(
+        "Admin Requests Services Error: " . $e->getMessage()
+    );
+
+    $error = "Unable to load request filters.";
+}
+
+/*
+|--------------------------------------------------------------------------
+| Build request filters
+|--------------------------------------------------------------------------
+*/
+
+$where = [];
+$params = [];
+
+if ($search !== "") {
+
+    $where[] = "(
+        sr.title LIKE ?
+        OR sr.description LIKE ?
+        OR u.full_name LIKE ?
+        OR u.email LIKE ?
+        OR u.phone LIKE ?
+        OR sr.location LIKE ?
+    )";
+
+    $searchValue = "%" . $search . "%";
+
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+}
+
+if ($filterStatus !== "") {
+
+    $where[] = "sr.status = ?";
+    $params[] = $filterStatus;
+}
+
+if ($filterService !== "") {
+
+    $where[] = "sr.service_id = ?";
+    $params[] = (int) $filterService;
+}
+
+if ($filterUrgency !== "") {
+
+    $where[] = "sr.urgency = ?";
+    $params[] = $filterUrgency;
+}
+
+$whereSql = "";
+
+if (!empty($where)) {
+    $whereSql = "WHERE " . implode(" AND ", $where);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Count filtered requests
+|--------------------------------------------------------------------------
+*/
+
+$totalRequests = 0;
+$totalPages = 1;
+
+try {
+
+    $countSql = "
+        SELECT COUNT(*)
+        FROM service_requests sr
+        LEFT JOIN users u
+            ON u.id = sr.user_id
+        LEFT JOIN services s
+            ON s.id = sr.service_id
+        $whereSql
+    ";
+
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($params);
+
+    $totalRequests = (int) $countStmt->fetchColumn();
+
+    $totalPages = max(
+        1,
+        (int) ceil($totalRequests / $perPage)
+    );
+
+    if ($page > $totalPages) {
+        $page = $totalPages;
+    }
+
+} catch (Throwable $e) {
+
+    error_log(
+        "Admin Requests Count Error: " . $e->getMessage()
+    );
+
+    $error = "Unable to count service requests.";
+}
+
+/*
+|--------------------------------------------------------------------------
+| Load filtered requests
+|--------------------------------------------------------------------------
+*/
+
+try {
+
+    $offset = ($page - 1) * $perPage;
+
+    $requestSql = "
+        SELECT
+            sr.id,
+            sr.title,
+            sr.description,
+            sr.location,
+            sr.urgency,
+            sr.status,
+            sr.created_at,
+            sr.updated_at,
+            u.full_name,
+            u.email,
+            u.phone,
+            s.name AS service_name
+        FROM service_requests sr
+        LEFT JOIN users u
+            ON u.id = sr.user_id
+        LEFT JOIN services s
+            ON s.id = sr.service_id
+        $whereSql
+        ORDER BY sr.created_at DESC
+        LIMIT $perPage OFFSET $offset
+    ";
+
+    $stmt = $pdo->prepare($requestSql);
+    $stmt->execute($params);
+
+    $requests = $stmt->fetchAll();
+
+} catch (Throwable $e) {
+
+    error_log(
+        "Admin Requests Error: " . $e->getMessage()
+    );
+
+    $error = "Unable to load service requests.";
+}
+
+/*
+|--------------------------------------------------------------------------
+| Pagination URL
+|--------------------------------------------------------------------------
+*/
+
+function pageUrl(
+    int $pageNumber,
+    string $search,
+    string $filterStatus,
+    string $filterService,
+    string $filterUrgency
+): string {
+
+    $query = [
+        "page" => $pageNumber
+    ];
+
+    if ($search !== "") {
+        $query["search"] = $search;
+    }
+
+    if ($filterStatus !== "") {
+        $query["filter_status"] = $filterStatus;
+    }
+
+    if ($filterService !== "") {
+        $query["service_id"] = $filterService;
+    }
+
+    if ($filterUrgency !== "") {
+        $query["urgency"] = $filterUrgency;
+    }
+
+    return "requests.php?" . http_build_query($query);
+}
+
 ?>
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -89,14 +333,11 @@ function urgencyLabel(string $urgency): string
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-    <meta
-        name="robots"
-        content="noindex, nofollow">
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>
-        Requests — KHAN SOLUTIONS Admin
+        Requests | KHAN SOLUTIONS
     </title>
 
     <style>
@@ -107,47 +348,87 @@ function urgencyLabel(string $urgency): string
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            color: #1f2937;
+            min-height: 100vh;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            background:
+                #0f172a;
+            color: #f8fafc;
         }
 
         header {
+            padding: 25px 20px;
+            text-align: center;
             background: #111827;
-            color: #ffffff;
-            padding: 20px;
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.08);
         }
 
         header h1 {
             margin: 0;
-            font-size: 22px;
+            font-size: 1.7rem;
         }
 
         header p {
             margin: 6px 0 0;
-            opacity: 0.8;
+            color: #94a3b8;
         }
 
         nav {
-            background: #ffffff;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
             padding: 14px 20px;
-            border-bottom: 1px solid #e5e7eb;
+            background: #111827;
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+        }
+
+        nav a,
+        nav button {
+            display: inline-block;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
 
         nav a {
-            text-decoration: none;
-            margin-right: 18px;
-            font-weight: 600;
-            color: #374151;
+            color: #cbd5e1;
+            background:
+                rgba(255, 255, 255, 0.05);
         }
 
         nav a:hover {
-            text-decoration: underline;
+            background:
+                rgba(255, 255, 255, 0.1);
+        }
+
+        nav form {
+            margin: 0;
+        }
+
+        nav button {
+            color: #fff;
+            background: #dc2626;
+            cursor: pointer;
+        }
+
+        nav button:hover {
+            opacity: 0.9;
         }
 
         .container {
             width: min(1200px, 94%);
-            margin: 30px auto;
+            margin: 0 auto;
+            padding: 30px 0 50px;
         }
 
         .page-header {
@@ -155,200 +436,482 @@ function urgencyLabel(string $urgency): string
             justify-content: space-between;
             align-items: center;
             gap: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
 
         .page-header h2 {
             margin: 0;
+            font-size: 1.7rem;
+        }
+
+        .page-header p {
+            margin: 7px 0 0;
+            color: #94a3b8;
         }
 
         .request-count {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 10px;
+            background:
+                rgba(255, 255, 255, 0.06);
+            color: #cbd5e1;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filters
+        |--------------------------------------------------------------------------
+        */
+
+        .filters {
+            margin-bottom: 25px;
+            padding: 18px;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background:
+                rgba(255, 255, 255, 0.04);
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns:
+                minmax(220px, 2fr)
+                repeat(3, minmax(140px, 1fr))
+                auto
+                auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 11px 12px;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.12);
+            border-radius: 9px;
+            outline: none;
+            background: #111827;
+            color: #f8fafc;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: #64748b;
+        }
+
+        .filter-button,
+        .clear-button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 40px;
+            padding: 10px 15px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .filter-button {
+            border: 0;
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .filter-button:hover {
+            opacity: 0.9;
+        }
+
+        .clear-button {
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.12);
+            background:
+                rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Alerts
+        |--------------------------------------------------------------------------
+        */
+
+        .alert,
+        .success-alert {
+            margin-bottom: 20px;
+            padding: 13px 15px;
+            border-radius: 10px;
         }
 
         .alert {
-            padding: 14px;
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background:
+                rgba(220, 38, 38, 0.12);
+            border:
+                1px solid
+                rgba(220, 38, 38, 0.3);
+            color: #fecaca;
         }
+
         .success-alert {
-            padding: 14px;
-            background: #dcfce7;
-            border: 1px solid #bbf7d0;
-            color: #166534;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background:
+                rgba(34, 197, 94, 0.12);
+            border:
+                1px solid
+                rgba(34, 197, 94, 0.3);
+            color: #bbf7d0;
         }
-        .empty {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            padding: 40px 20px;
-            text-align: center;
-            border-radius: 12px;
-        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Request cards
+        |--------------------------------------------------------------------------
+        */
 
         .requests {
             display: grid;
-            gap: 20px;
+            gap: 18px;
         }
 
         .request-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 22px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            padding: 20px;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            background:
+                rgba(255, 255, 255, 0.045);
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, 0.16);
         }
 
         .request-top {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 18px;
         }
 
-        .request-title {
-            margin: 0 0 7px;
-            font-size: 19px;
+        .request-id {
+            display: block;
+            margin-bottom: 5px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
-        .request-id {
-            color: #6b7280;
-            font-size: 14px;
+        .request-title {
+            margin: 0;
+            font-size: 1.15rem;
+            line-height: 1.4;
         }
 
         .badges {
             display: flex;
-            gap: 8px;
             flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 7px;
         }
 
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 6px 10px;
             border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 800;
         }
 
         .status-pending {
-            background: #fef3c7;
-            color: #92400e;
+            background:
+                rgba(234, 179, 8, 0.15);
+            color: #fde68a;
         }
 
         .status-in_progress {
-            background: #dbeafe;
-            color: #1e40af;
+            background:
+                rgba(59, 130, 246, 0.15);
+            color: #bfdbfe;
         }
 
         .status-completed {
-            background: #dcfce7;
-            color: #166534;
+            background:
+                rgba(34, 197, 94, 0.15);
+            color: #bbf7d0;
         }
 
         .status-cancelled {
-            background: #fee2e2;
-            color: #991b1b;
+            background:
+                rgba(239, 68, 68, 0.15);
+            color: #fecaca;
         }
 
         .urgency-low {
-            background: #e5e7eb;
-            color: #374151;
+            background:
+                rgba(34, 197, 94, 0.12);
+            color: #bbf7d0;
         }
 
         .urgency-medium {
-            background: #fef3c7;
-            color: #92400e;
+            background:
+                rgba(234, 179, 8, 0.12);
+            color: #fde68a;
         }
 
         .urgency-high {
-            background: #fee2e2;
-            color: #991b1b;
+            background:
+                rgba(239, 68, 68, 0.14);
+            color: #fecaca;
         }
 
         .details {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-            margin-bottom: 20px;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
         }
 
         .detail {
-            border: 1px solid #eef0f2;
-            border-radius: 8px;
             padding: 12px;
+            border-radius: 10px;
+            background:
+                rgba(0, 0, 0, 0.14);
         }
 
         .detail-label {
             display: block;
-            font-size: 12px;
-            color: #6b7280;
             margin-bottom: 5px;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 800;
             text-transform: uppercase;
         }
 
         .detail-value {
-            word-break: break-word;
+            display: block;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            overflow-wrap: anywhere;
         }
 
         .description {
-            padding: 15px;
-            background: #f9fafb;
+            margin-bottom: 18px;
+            padding: 14px;
+            border-left:
+                3px solid
+                #475569;
             border-radius: 8px;
-            margin-bottom: 20px;
+            background:
+                rgba(0, 0, 0, 0.12);
+            color: #cbd5e1;
             line-height: 1.6;
+        }
+
+        .description strong {
+            color: #f8fafc;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Actions
+        |--------------------------------------------------------------------------
+        */
+
+        .request-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 10px;
+            margin-bottom: 14px;
         }
 
         .status-form {
             display: flex;
             align-items: end;
-            gap: 12px;
-            flex-wrap: wrap;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 18px;
+            gap: 9px;
+            margin: 0;
+        }
+
+        .status-form div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .status-form label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
+            color: #94a3b8;
+            font-size: 0.76rem;
+            font-weight: 700;
         }
 
         .status-form select {
-            min-width: 180px;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            background: #ffffff;
+            min-width: 170px;
+            padding: 10px 11px;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            background: #111827;
+            color: #f8fafc;
+            outline: none;
         }
 
         .status-form button {
+            padding: 10px 14px;
             border: 0;
-            padding: 10px 16px;
-            border-radius: 7px;
-            cursor: pointer;
+            border-radius: 8px;
+            background: #2563eb;
+            color: #fff;
             font-weight: 700;
-            background: #111827;
-            color: #ffffff;
+            cursor: pointer;
         }
 
         .status-form button:hover {
             opacity: 0.9;
         }
 
+        .view-details-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 10px 15px;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            background:
+                rgba(255, 255, 255, 0.06);
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .view-details-button:hover {
+            background:
+                rgba(255, 255, 255, 0.12);
+        }
+
         .submitted {
-            margin-top: 16px;
-            color: #6b7280;
-            font-size: 13px;
+            color: #64748b;
+            font-size: 0.78rem;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Empty state
+        |--------------------------------------------------------------------------
+        */
+
+        .empty {
+            padding: 50px 20px;
+            text-align: center;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background:
+                rgba(255, 255, 255, 0.04);
+        }
+
+        .empty h3 {
+            margin: 0 0 8px;
+        }
+
+        .empty p {
+            margin: 0;
+            color: #94a3b8;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pagination
+        |--------------------------------------------------------------------------
+        */
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 28px;
+        }
+
+        .pagination a,
+        .pagination span {
+            min-width: 40px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.86rem;
+        }
+
+        .pagination a {
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.1);
+            background:
+                rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+        }
+
+        .pagination a:hover {
+            background:
+                rgba(255, 255, 255, 0.1);
+        }
+
+        .pagination .current {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .pagination .disabled {
+            opacity: 0.35;
+        }
+
+        .pagination-info {
+            margin-top: 12px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.78rem;
+        }
+
+        @media (max-width: 900px) {
+
+            .filter-form {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .filter-group.search-group {
+                grid-column: 1 / -1;
+            }
+
         }
 
         @media (max-width: 700px) {
@@ -359,24 +922,63 @@ function urgencyLabel(string $urgency): string
                 align-items: flex-start;
             }
 
+            .badges {
+                justify-content: flex-start;
+            }
+
             .details {
                 grid-template-columns: 1fr;
             }
 
+            .filter-form {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-group.search-group {
+                grid-column: auto;
+            }
+
+            .filter-button,
+            .clear-button {
+                width: 100%;
+            }
+
+            .request-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
             .status-form {
+                width: 100%;
                 align-items: stretch;
                 flex-direction: column;
             }
 
             .status-form select,
-            .status-form button {
+            .status-form button,
+            .view-details-button {
                 width: 100%;
             }
 
-            nav a {
-                display: inline-block;
-                margin-bottom: 8px;
+            .status-form select {
+                min-width: 0;
             }
+
+            nav a,
+            nav form,
+            nav button {
+                width: 100%;
+            }
+
+            nav a,
+            nav button {
+                text-align: center;
+            }
+
+            nav form {
+                margin: 0;
+            }
+
         }
 
     </style>
@@ -396,7 +998,6 @@ function urgencyLabel(string $urgency): string
     </p>
 
 </header>
-
 
 <nav>
 
@@ -422,24 +1023,19 @@ function urgencyLabel(string $urgency): string
 
     <form method="POST" action="logout.php">
 
-    <input
-        type="hidden"
-        name="csrf_token"
-        value="<?= htmlspecialchars(
-            csrfToken(),
-            ENT_QUOTES,
-            "UTF-8"
-        ) ?>"
-    >
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= cleanOutput(csrfToken()) ?>"
+        >
 
-    <button type="submit">
-        Logout
-    </button>
+        <button type="submit">
+            Logout
+        </button>
 
-</form>
+    </form>
 
 </nav>
-
 
 <div class="container">
 
@@ -459,59 +1055,204 @@ function urgencyLabel(string $urgency): string
 
         <div class="request-count">
 
-            <?= count($requests) ?>
+            <?= $totalRequests ?>
 
-            Request<?= count($requests) === 1 ? "" : "s" ?>
+            Request<?= $totalRequests === 1 ? "" : "s" ?>
 
         </div>
 
     </div>
-
 
     <?php if ($error !== ""): ?>
 
         <div class="alert">
 
-            <?= htmlspecialchars(
-                $error,
-                ENT_QUOTES,
-                "UTF-8"
-            ) ?>
+            <?= cleanOutput($error) ?>
 
         </div>
 
     <?php endif; ?>
-        <?php if ($success !== ""): ?>
 
-    <div class="success-alert">
+    <?php if ($success !== ""): ?>
 
-        <?= htmlspecialchars(
-            $success,
-            ENT_QUOTES,
-            "UTF-8"
-        ) ?>
+        <div class="success-alert">
 
-    </div>
+            <?= cleanOutput($success) ?>
+
+        </div>
 
     <?php endif; ?>
 
+    <!-- FILTERS -->
+
+    <section class="filters">
+
+        <form
+            method="GET"
+            action="requests.php"
+            class="filter-form"
+        >
+
+            <div class="filter-group search-group">
+
+                <label for="search">
+                    Search Requests
+                </label>
+
+                <input
+                    type="search"
+                    id="search"
+                    name="search"
+                    value="<?= cleanOutput($search) ?>"
+                    placeholder="Title, client, email, phone, location..."
+                >
+
+            </div>
+
+            <div class="filter-group">
+
+                <label for="filter_status">
+                    Status
+                </label>
+
+                <select
+                    id="filter_status"
+                    name="filter_status"
+                >
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    <?php foreach ($allowedStatuses as $status): ?>
+
+                        <option
+                            value="<?= cleanOutput($status) ?>"
+                            <?= $filterStatus === $status
+                                ? "selected"
+                                : "" ?>
+                        >
+                            <?= cleanOutput(statusLabel($status)) ?>
+                        </option>
+
+                    <?php endforeach; ?>
+
+                </select>
+
+            </div>
+
+            <div class="filter-group">
+
+                <label for="service_id">
+                    Service
+                </label>
+
+                <select
+                    id="service_id"
+                    name="service_id"
+                >
+
+                    <option value="">
+                        All Services
+                    </option>
+
+                    <?php foreach ($services as $service): ?>
+
+                        <option
+                            value="<?= (int) $service["id"] ?>"
+                            <?= $filterService === (string) $service["id"]
+                                ? "selected"
+                                : "" ?>
+                        >
+                            <?= cleanOutput($service["name"]) ?>
+                        </option>
+
+                    <?php endforeach; ?>
+
+                </select>
+
+            </div>
+
+            <div class="filter-group">
+
+                <label for="urgency">
+                    Urgency
+                </label>
+
+                <select
+                    id="urgency"
+                    name="urgency"
+                >
+
+                    <option value="">
+                        All Urgency
+                    </option>
+
+                    <?php foreach ($allowedUrgencies as $urgency): ?>
+
+                        <option
+                            value="<?= cleanOutput($urgency) ?>"
+                            <?= $filterUrgency === $urgency
+                                ? "selected"
+                                : "" ?>
+                        >
+                            <?= cleanOutput(urgencyLabel($urgency)) ?>
+                        </option>
+
+                    <?php endforeach; ?>
+
+                </select>
+
+            </div>
+
+            <button
+                type="submit"
+                class="filter-button"
+            >
+                Filter
+            </button>
+
+            <a
+                href="requests.php"
+                class="clear-button"
+            >
+                Clear
+            </a>
+
+        </form>
+
+    </section>
 
     <?php if (empty($requests)): ?>
 
         <div class="empty">
 
             <h3>
-                No Service Requests
+                No Service Requests Found
             </h3>
 
-            <p>
-                There are currently no service requests.
-            </p>
+            <?php if (
+                $search !== "" ||
+                $filterStatus !== "" ||
+                $filterService !== "" ||
+                $filterUrgency !== ""
+            ): ?>
+
+                <p>
+                    No requests match the current search or filters.
+                </p>
+
+            <?php else: ?>
+
+                <p>
+                    There are currently no service requests.
+                </p>
+
+            <?php endif; ?>
 
         </div>
 
     <?php else: ?>
-
 
         <div class="requests">
 
@@ -532,52 +1273,38 @@ function urgencyLabel(string $urgency): string
 
                             <h3 class="request-title">
 
-                                <?= htmlspecialchars(
-                                    $request["title"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
-                                ) ?>
+                                <?= cleanOutput($request["title"]) ?>
 
                             </h3>
 
                         </div>
 
-
                         <div class="badges">
 
                             <span
-                                class="badge status-<?= htmlspecialchars(
-                                    $request["status"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                class="badge status-<?= cleanOutput(
+                                    $request["status"]
                                 ) ?>"
                             >
 
-                                <?= htmlspecialchars(
+                                <?= cleanOutput(
                                     statusLabel(
                                         $request["status"]
-                                    ),
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                    )
                                 ) ?>
 
                             </span>
 
-
                             <span
-                                class="badge urgency-<?= htmlspecialchars(
-                                    $request["urgency"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                class="badge urgency-<?= cleanOutput(
+                                    $request["urgency"]
                                 ) ?>"
                             >
 
-                                <?= htmlspecialchars(
+                                <?= cleanOutput(
                                     urgencyLabel(
                                         $request["urgency"]
-                                    ),
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                    )
                                 ) ?>
 
                             </span>
@@ -585,7 +1312,6 @@ function urgencyLabel(string $urgency): string
                         </div>
 
                     </div>
-
 
                     <div class="details">
 
@@ -596,17 +1322,12 @@ function urgencyLabel(string $urgency): string
                             </span>
 
                             <span class="detail-value">
-
-                                <?= htmlspecialchars(
-                                    $request["service_name"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                <?= cleanOutput(
+                                    $request["service_name"]
                                 ) ?>
-
                             </span>
 
                         </div>
-
 
                         <div class="detail">
 
@@ -615,17 +1336,12 @@ function urgencyLabel(string $urgency): string
                             </span>
 
                             <span class="detail-value">
-
-                                <?= htmlspecialchars(
-                                    $request["full_name"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                <?= cleanOutput(
+                                    $request["full_name"]
                                 ) ?>
-
                             </span>
 
                         </div>
-
 
                         <div class="detail">
 
@@ -634,17 +1350,12 @@ function urgencyLabel(string $urgency): string
                             </span>
 
                             <span class="detail-value">
-
-                                <?= htmlspecialchars(
-                                    $request["email"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                <?= cleanOutput(
+                                    $request["email"]
                                 ) ?>
-
                             </span>
 
                         </div>
-
 
                         <div class="detail">
 
@@ -653,17 +1364,12 @@ function urgencyLabel(string $urgency): string
                             </span>
 
                             <span class="detail-value">
-
-                                <?= htmlspecialchars(
-                                    $request["phone"] ?? "",
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                <?= cleanOutput(
+                                    $request["phone"]
                                 ) ?>
-
                             </span>
 
                         </div>
-
 
                         <div class="detail">
 
@@ -672,19 +1378,14 @@ function urgencyLabel(string $urgency): string
                             </span>
 
                             <span class="detail-value">
-
-                                <?= htmlspecialchars(
-                                    $request["location"] ?? "",
-                                    ENT_QUOTES,
-                                    "UTF-8"
+                                <?= cleanOutput(
+                                    $request["location"]
                                 ) ?>
-
                             </span>
 
                         </div>
 
                     </div>
-
 
                     <div class="description">
 
@@ -695,106 +1396,91 @@ function urgencyLabel(string $urgency): string
                         <br><br>
 
                         <?= nl2br(
-                            htmlspecialchars(
-                                $request["description"] ?? "",
-                                ENT_QUOTES,
-                                "UTF-8"
+                            cleanOutput(
+                                $request["description"]
                             )
                         ) ?>
 
                     </div>
 
+                    <div class="request-actions">
 
-                    <form
-                        class="status-form"
-                        method="POST"
-                        action="update-request-status.php"
-                    >
-                        <input
-                            type="hidden"
-                            name="csrf_token"
-                            value="<?= htmlspecialchars(
-                                csrfToken(),
-                                ENT_QUOTES,
-                                "UTF-8"
-                            ) ?>"
-                        >
-                        <input
-                            type="hidden"
-                            name="request_id"
-                            value="<?= (int) $request["id"] ?>"
+                        <form
+                            class="status-form"
+                            method="POST"
+                            action="update-request-status.php"
                         >
 
-
-                        <div>
-
-                            <label
-                                for="status-<?= (int) $request["id"] ?>"
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="<?= cleanOutput(
+                                    csrfToken()
+                                ) ?>"
                             >
+
+                            <input
+                                type="hidden"
+                                name="request_id"
+                                value="<?= (int) $request["id"] ?>"
+                            >
+
+                            <div>
+
+                                <label
+                                    for="status-<?= (int) $request["id"] ?>"
+                                >
+                                    Update Status
+                                </label>
+
+                                <select
+                                    id="status-<?= (int) $request["id"] ?>"
+                                    name="status"
+                                    required
+                                >
+
+                                    <?php foreach (
+                                        $allowedStatuses
+                                        as $status
+                                    ): ?>
+
+                                        <option
+                                            value="<?= cleanOutput($status) ?>"
+                                            <?= $request["status"] === $status
+                                                ? "selected"
+                                                : "" ?>
+                                        >
+                                            <?= cleanOutput(
+                                                statusLabel($status)
+                                            ) ?>
+                                        </option>
+
+                                    <?php endforeach; ?>
+
+                                </select>
+
+                            </div>
+
+                            <button type="submit">
                                 Update Status
-                            </label>
+                            </button>
 
-                            <select
-                                id="status-<?= (int) $request["id"] ?>"
-                                name="status"
-                                required
-                            >
+                        </form>
 
-                                <option
-                                    value="pending"
-                                    <?= $request["status"] === "pending"
-                                        ? "selected"
-                                        : "" ?>
-                                >
-                                    Pending
-                                </option>
+                        <a
+                            href="request-details.php?id=<?= (int) $request["id"] ?>"
+                            class="view-details-button"
+                        >
+                            View Details
+                        </a>
 
-                                <option
-                                    value="in_progress"
-                                    <?= $request["status"] === "in_progress"
-                                        ? "selected"
-                                        : "" ?>
-                                >
-                                    In Progress
-                                </option>
-
-                                <option
-                                    value="completed"
-                                    <?= $request["status"] === "completed"
-                                        ? "selected"
-                                        : "" ?>
-                                >
-                                    Completed
-                                </option>
-
-                                <option
-                                    value="cancelled"
-                                    <?= $request["status"] === "cancelled"
-                                        ? "selected"
-                                        : "" ?>
-                                >
-                                    Cancelled
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <button type="submit">
-                            Update Status
-                        </button>
-
-                    </form>
-
+                    </div>
 
                     <div class="submitted">
 
                         Submitted:
-                        <?= htmlspecialchars(
-                            $request["created_at"],
-                            ENT_QUOTES,
-                            "UTF-8"
+                        <?= cleanOutput(
+                            $request["created_at"]
                         ) ?>
 
                     </div>
@@ -804,6 +1490,126 @@ function urgencyLabel(string $urgency): string
             <?php endforeach; ?>
 
         </div>
+
+        <?php if ($totalPages > 1): ?>
+
+            <div class="pagination">
+
+                <?php if ($page > 1): ?>
+
+                    <a
+                        href="<?= cleanOutput(
+                            pageUrl(
+                                $page - 1,
+                                $search,
+                                $filterStatus,
+                                $filterService,
+                                $filterUrgency
+                            )
+                        ) ?>"
+                    >
+                        ← Previous
+                    </a>
+
+                <?php else: ?>
+
+                    <span class="disabled">
+                        ← Previous
+                    </span>
+
+                <?php endif; ?>
+
+                <?php
+
+                $startPage = max(1, $page - 2);
+                $endPage = min(
+                    $totalPages,
+                    $page + 2
+                );
+
+                for (
+                    $pageNumber = $startPage;
+                    $pageNumber <= $endPage;
+                    $pageNumber++
+                ):
+                ?>
+
+                    <?php if ($pageNumber === $page): ?>
+
+                        <span class="current">
+                            <?= $pageNumber ?>
+                        </span>
+
+                    <?php else: ?>
+
+                        <a
+                            href="<?= cleanOutput(
+                                pageUrl(
+                                    $pageNumber,
+                                    $search,
+                                    $filterStatus,
+                                    $filterService,
+                                    $filterUrgency
+                                )
+                            ) ?>"
+                        >
+                            <?= $pageNumber ?>
+                        </a>
+
+                    <?php endif; ?>
+
+                <?php endfor; ?>
+
+                <?php if ($page < $totalPages): ?>
+
+                    <a
+                        href="<?= cleanOutput(
+                            pageUrl(
+                                $page + 1,
+                                $search,
+                                $filterStatus,
+                                $filterService,
+                                $filterUrgency
+                            )
+                        ) ?>"
+                    >
+                        Next →
+                    </a>
+
+                <?php else: ?>
+
+                    <span class="disabled">
+                        Next →
+                    </span>
+
+                <?php endif; ?>
+
+            </div>
+
+            <div class="pagination-info">
+
+                Page <?= $page ?>
+                of <?= $totalPages ?>
+
+                ·
+
+                Showing
+                <?= min(
+                    $totalRequests,
+                    $offset + 1
+                ) ?>
+
+                -
+                <?= min(
+                    $totalRequests,
+                    $offset + count($requests)
+                ) ?>
+
+                of <?= $totalRequests ?> requests
+
+            </div>
+
+        <?php endif; ?>
 
     <?php endif; ?>
 

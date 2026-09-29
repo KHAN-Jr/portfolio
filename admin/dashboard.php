@@ -19,17 +19,26 @@ $totalRequests = 0;
 $pendingRequests = 0;
 $inProgressRequests = 0;
 $completedRequests = 0;
+$cancelledRequests = 0;
+
 $totalUsers = 0;
 $totalServices = 0;
+$activeServices = 0;
+
+$recentRequests = [];
 
 try {
 
+    /*
+     * REQUEST STATISTICS
+     */
     $stmt = $pdo->query(
         "SELECT
             COUNT(*) AS total_requests,
-            SUM(status = 'pending') AS pending_requests,
-            SUM(status = 'in_progress') AS in_progress_requests,
-            SUM(status = 'completed') AS completed_requests
+            COALESCE(SUM(status = 'pending'), 0) AS pending_requests,
+            COALESCE(SUM(status = 'in_progress'), 0) AS in_progress_requests,
+            COALESCE(SUM(status = 'completed'), 0) AS completed_requests,
+            COALESCE(SUM(status = 'cancelled'), 0) AS cancelled_requests
          FROM service_requests"
     );
 
@@ -39,7 +48,12 @@ try {
     $pendingRequests = (int) ($stats["pending_requests"] ?? 0);
     $inProgressRequests = (int) ($stats["in_progress_requests"] ?? 0);
     $completedRequests = (int) ($stats["completed_requests"] ?? 0);
+    $cancelledRequests = (int) ($stats["cancelled_requests"] ?? 0);
 
+
+    /*
+     * CLIENT STATISTICS
+     */
     $stmt = $pdo->query(
         "SELECT COUNT(*) AS total_users
          FROM users
@@ -48,13 +62,46 @@ try {
 
     $totalUsers = (int) $stmt->fetch()["total_users"];
 
+
+    /*
+     * SERVICE STATISTICS
+     */
     $stmt = $pdo->query(
-        "SELECT COUNT(*) AS total_services
-         FROM services
-         WHERE is_active = 1"
+        "SELECT
+            COUNT(*) AS total_services,
+            COALESCE(SUM(is_active = 1), 0) AS active_services
+         FROM services"
     );
 
-    $totalServices = (int) $stmt->fetch()["total_services"];
+    $serviceStats = $stmt->fetch();
+
+    $totalServices = (int) ($serviceStats["total_services"] ?? 0);
+    $activeServices = (int) ($serviceStats["active_services"] ?? 0);
+
+
+    /*
+     * RECENT SERVICE REQUESTS
+     */
+    $stmt = $pdo->query(
+        "SELECT
+            sr.id,
+            sr.title,
+            sr.location,
+            sr.urgency,
+            sr.status,
+            sr.created_at,
+            u.full_name AS client_name,
+            s.name AS service_name
+         FROM service_requests sr
+         LEFT JOIN users u
+            ON u.id = sr.user_id
+         LEFT JOIN services s
+            ON s.id = sr.service_id
+         ORDER BY sr.id DESC
+         LIMIT 8"
+    );
+
+    $recentRequests = $stmt->fetchAll();
 
 } catch (Throwable $e) {
 
@@ -64,7 +111,6 @@ try {
 }
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -117,17 +163,34 @@ try {
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
         nav a {
             color: #374151;
             text-decoration: none;
             font-weight: 600;
-            margin-right: 22px;
         }
 
         nav a:hover {
             text-decoration: underline;
+        }
+
+        nav form {
+            margin: 0;
+        }
+
+        nav button {
+            border: 0;
+            background: transparent;
+            color: #b91c1c;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
         }
 
         .container {
@@ -149,18 +212,23 @@ try {
             color: #6b7280;
         }
 
+
+        /*
+         * STATISTICS
+         */
+
         .stats {
             display: grid;
             grid-template-columns:
-                repeat(3, minmax(0, 1fr));
-            gap: 20px;
+                repeat(4, minmax(0, 1fr));
+            gap: 18px;
         }
 
         .stat-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
-            padding: 22px;
+            padding: 20px;
             box-shadow:
                 0 2px 8px rgba(0, 0, 0, 0.04);
         }
@@ -184,13 +252,165 @@ try {
             font-size: 13px;
         }
 
+
+        /*
+         * SECTIONS
+         */
+
         .section {
-            margin-top: 35px;
+            margin-top: 40px;
         }
 
-        .section h3 {
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
             margin-bottom: 18px;
         }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .view-all {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+
+        /*
+         * RECENT REQUESTS
+         */
+
+        .table-wrapper {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .request-title {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .client-name {
+            color: #374151;
+        }
+
+        .service-name {
+            color: #64748b;
+        }
+
+        .date {
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+
+        /*
+         * STATUS BADGES
+         */
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-in-progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-default {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+
+        /*
+         * URGENCY
+         */
+
+        .urgency {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+
+        /*
+         * EMPTY STATE
+         */
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+
+        /*
+         * QUICK LINKS
+         */
 
         .quick-links {
             display: grid;
@@ -207,6 +427,8 @@ try {
             padding: 20px;
             text-decoration: none;
             color: #1f2937;
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.03);
         }
 
         .quick-link:hover {
@@ -223,9 +445,10 @@ try {
             font-size: 14px;
         }
 
-        .logout {
-            color: #b91c1c;
-        }
+
+        /*
+         * FOOTER
+         */
 
         footer {
             margin-top: 50px;
@@ -235,9 +458,18 @@ try {
             font-size: 13px;
         }
 
-        @media (max-width: 850px) {
 
-            .stats,
+        /*
+         * TABLET
+         */
+
+        @media (max-width: 1000px) {
+
+            .stats {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
             .quick-links {
                 grid-template-columns:
                     repeat(2, minmax(0, 1fr));
@@ -245,20 +477,54 @@ try {
 
         }
 
+
+        /*
+         * MOBILE
+         */
+
         @media (max-width: 550px) {
+
+            .container {
+                width: 92%;
+                margin: 25px auto;
+            }
+
+            header {
+                padding: 20px 4%;
+            }
+
+            nav {
+                padding: 14px 4%;
+                gap: 14px;
+            }
+
+            nav a {
+                font-size: 14px;
+            }
+
+            .welcome h2 {
+                font-size: 23px;
+            }
 
             .stats,
             .quick-links {
                 grid-template-columns: 1fr;
             }
 
-            nav a {
-                display: inline-block;
-                margin-bottom: 10px;
+            .stat-card {
+                padding: 18px;
             }
 
-            .welcome h2 {
-                font-size: 23px;
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .section {
+                margin-top: 30px;
+            }
+
+            .section-header {
+                align-items: flex-start;
             }
 
         }
@@ -267,7 +533,9 @@ try {
 
 </head>
 
+
 <body>
+
 
 <header>
 
@@ -306,26 +574,29 @@ try {
 
     <form method="POST" action="logout.php">
 
-    <input
-        type="hidden"
-        name="csrf_token"
-        value="<?= htmlspecialchars(
-            csrfToken(),
-            ENT_QUOTES,
-            "UTF-8"
-        ) ?>"
-    >
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= htmlspecialchars(
+                csrfToken(),
+                ENT_QUOTES,
+                "UTF-8"
+            ) ?>"
+        >
 
-    <button type="submit">
-        Logout
-    </button>
+        <button type="submit">
+            Logout
+        </button>
 
-</form>
+    </form>
 
 </nav>
 
 
 <div class="container">
+
+
+    <!-- WELCOME -->
 
     <section class="welcome">
 
@@ -345,7 +616,10 @@ try {
     </section>
 
 
+    <!-- STATISTICS -->
+
     <section class="stats">
+
 
         <article class="stat-card">
 
@@ -418,6 +692,23 @@ try {
         <article class="stat-card">
 
             <p class="stat-label">
+                Cancelled
+            </p>
+
+            <p class="stat-value">
+                <?= $cancelledRequests ?>
+            </p>
+
+            <p class="stat-description">
+                Cancelled requests
+            </p>
+
+        </article>
+
+
+        <article class="stat-card">
+
+            <p class="stat-label">
                 Clients
             </p>
 
@@ -435,7 +726,7 @@ try {
         <article class="stat-card">
 
             <p class="stat-label">
-                Active Services
+                Total Services
             </p>
 
             <p class="stat-value">
@@ -443,21 +734,237 @@ try {
             </p>
 
             <p class="stat-description">
-                Available services
+                Services in system
             </p>
 
         </article>
 
+
+        <article class="stat-card">
+
+            <p class="stat-label">
+                Active Services
+            </p>
+
+            <p class="stat-value">
+                <?= $activeServices ?>
+            </p>
+
+            <p class="stat-description">
+                Currently available
+            </p>
+
+        </article>
+
+
     </section>
 
 
+    <!-- RECENT REQUESTS -->
+
     <section class="section">
 
-        <h3>
-            Quick Access
-        </h3>
+        <div class="section-header">
+
+            <h3>
+                Recent Service Requests
+            </h3>
+
+            <a
+                class="view-all"
+                href="requests.php"
+            >
+                View All
+            </a>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <?php if (count($recentRequests) > 0): ?>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                ID
+                            </th>
+
+                            <th>
+                                Client
+                            </th>
+
+                            <th>
+                                Service
+                            </th>
+
+                            <th>
+                                Request
+                            </th>
+
+                            <th>
+                                Urgency
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        <?php foreach ($recentRequests as $request): ?>
+
+                            <?php
+
+                            $status = $request["status"] ?? "";
+
+                            $statusClass = "status-default";
+
+                            if ($status === "pending") {
+                                $statusClass = "status-pending";
+                            } elseif ($status === "in_progress") {
+                                $statusClass = "status-in-progress";
+                            } elseif ($status === "completed") {
+                                $statusClass = "status-completed";
+                            } elseif ($status === "cancelled") {
+                                $statusClass = "status-cancelled";
+                            }
+
+                            ?>
+
+                            <tr>
+
+                                <td>
+                                    #<?= (int) $request["id"] ?>
+                                </td>
+
+
+                                <td class="client-name">
+
+                                    <?= htmlspecialchars(
+                                        $request["client_name"] ?? "Unknown",
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?>
+
+                                </td>
+
+
+                                <td class="service-name">
+
+                                    <?= htmlspecialchars(
+                                        $request["service_name"] ?? "Unknown",
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?>
+
+                                </td>
+
+
+                                <td class="request-title">
+
+                                    <?= htmlspecialchars(
+                                        $request["title"] ?? "",
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?>
+
+                                </td>
+
+
+                                <td class="urgency">
+
+                                    <?= htmlspecialchars(
+                                        $request["urgency"] ?? "",
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span
+                                        class="status <?= $statusClass ?>"
+                                    >
+
+                                        <?= htmlspecialchars(
+                                            str_replace(
+                                                "_",
+                                                " ",
+                                                $status
+                                            ),
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <td class="date">
+
+                                    <?= htmlspecialchars(
+                                        $request["created_at"] ?? "",
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?>
+
+                                </td>
+
+                            </tr>
+
+                        <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            <?php else: ?>
+
+                <div class="empty-state">
+
+                    No service requests found.
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+    </section>
+
+
+    <!-- QUICK ACCESS -->
+
+    <section class="section">
+
+        <div class="section-header">
+
+            <h3>
+                Quick Access
+            </h3>
+
+        </div>
+
 
         <div class="quick-links">
+
 
             <a
                 class="quick-link"
@@ -506,9 +1013,11 @@ try {
 
             </a>
 
+
         </div>
 
     </section>
+
 
 </div>
 
@@ -518,6 +1027,7 @@ try {
     KHAN SOLUTIONS Administration System
 
 </footer>
+
 
 </body>
 
