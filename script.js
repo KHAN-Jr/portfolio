@@ -898,7 +898,15 @@ function initServiceRequestForm() {
         status.className =
             "request-status";
 
-        const formData = new FormData(form);
+        const formData = new FormData();
+
+for (const [key, value] of new FormData(form).entries()) {
+    if (key === "attachment" && value instanceof File && value.size === 0) {
+        continue;
+    }
+
+    formData.append(key, value);
+}
 
 formData.set("service", service);
 formData.set("name", name);
@@ -927,7 +935,7 @@ formData.set("urgency", urgency);
              * Save request to MariaDB through PHP backend.
              */
             const response = await fetch(
-                "https://khan-solutions-8.infinityfreeapp.com/api/service-request.php",
+                "/api/service-request.php",
                 {
                     method: "POST",
                     body: formData

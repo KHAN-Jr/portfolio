@@ -225,7 +225,8 @@ $storedFilePath = null;
 
 if (
     isset($_FILES["attachment"]) &&
-    is_array($_FILES["attachment"])
+    is_array($_FILES["attachment"]) &&
+    $_FILES["attachment"]["error"] !== UPLOAD_ERR_NO_FILE
 ) {
     $attachment = $_FILES["attachment"];
 
@@ -368,7 +369,7 @@ if (
     */
 
     $uploadDirectory =
-    "/storage/emulated/0/khan uploads/requests/";
+        __DIR__ . "/../khan uploads/requests/";
 
     if (
         !is_dir($uploadDirectory)
